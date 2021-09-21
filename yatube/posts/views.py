@@ -6,8 +6,10 @@ from .forms import PostForm, CommentForm
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import cache_page
 
 
+@cache_page(20, key_prefix='index_page')
 def index(request):
     post_list = Post.objects.all()
     paginator = Paginator(post_list, settings.PAGINATOR_PAGE)
@@ -42,7 +44,10 @@ def profile(request, username):
     paginator = Paginator(profile_posts, settings.PAGINATOR_PAGE)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    if Follow.objects.filter(user=100, author=200).exists():
+    if (
+        (request.user.is_authenticated)
+        and (Follow.objects.filter(user=request.user, author=profile).exists())
+    ):
         following = True
         context = {
             'author': profile,
@@ -50,10 +55,8 @@ def profile(request, username):
             'following': following,
         }
         return render(request, 'posts/profile.html', context)
-    following = False
     context = {'author': profile,
                'page_obj': page_obj,
-               'following': following,
                }
     return render(request, 'posts/profile.html', context)
 
