@@ -31,15 +31,19 @@
             </li>
           </ul>
         </aside>
+        
         <article class="col-12 col-md-9">
          
+         <div class="media mb-4">
           <p>
-          {{ post.text }}
-          {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
-    <img class="card-img my-2" src="{{ im.url }}">
-  {% endthumbnail %}
+            {{ post.text }}
+            {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
+              <img class="card-img my-2" src="{{ im.url }}">
+            {% endthumbnail %}
           </p>
-          
+          </div>
+         
+
           {% if is_edit %}
           <form action="{% url 'posts:post_edit' post.pk %}">
             <input type="submit"  class="btn btn-primary" name="csrfmiddlewaretoken" value="Редактировать">
@@ -49,8 +53,21 @@
 
   
 
-
-       
+<hr>
+{% for comment in comments %}
+  <div class="media mb-4">
+    <div class="media-body">
+      <h5 class="mt-0">
+        <a href="{% url 'posts:profile' comment.author.username %}">
+          {{ comment.author.username }}
+        </a>
+      </h5>
+        <p>
+         {{ comment.text }}
+        </p>
+      </div>
+    </div>
+{% endfor %}      
 
 
 {% if user.is_authenticated %}
@@ -69,22 +86,9 @@
 {% endif %}
 
 
-{% for comment in comments %}
-  <div class="media mb-4">
-    <div class="media-body">
-      <h5 class="mt-0">
-        <a href="{% url 'posts:profile' comment.author.username %}">
-          {{ comment.author.username }}
-        </a>
-      </h5>
-        <p>
-         {{ comment.text }}
-        </p>
-      </div>
-    </div>
-{% endfor %} 
+ 
 
- </article>
+      </article>
       </div> 
 
 {% endblock %}

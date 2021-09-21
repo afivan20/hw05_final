@@ -88,7 +88,7 @@ def post_create(request):
     if request.method != 'POST':
         form = PostForm()
         return render(request, 'posts/create_post.html', {'form': form})
-    form = PostForm(request.POST)
+    form = PostForm(request.POST, files=request.FILES or None)
     if not form.is_valid():
         return render(request, 'posts/create_post.html', {'form': form})
     form = form.save(commit=False)
@@ -136,10 +136,11 @@ def follow_index(request):
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
+    title = 'Мои подписки'
     return render(
         request,
         "posts/follow.html",
-        {'page_obj': page, 'paginator': paginator}
+        {'page_obj': page, 'paginator': paginator, 'title': title}
     )
 
 

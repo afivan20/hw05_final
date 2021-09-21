@@ -4,6 +4,8 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django import forms
 from posts.models import Post, Group
+from django.core.cache import cache
+
 
 User = get_user_model()
 
@@ -32,6 +34,7 @@ class PostsPagesTests(TestCase):
 
     def test_pages_uses_correct_template(self):
         """URL-ссылка использует соответствующий шаблон."""
+        cache.clear()
         templates_pages_names = {
             1: ('posts/index.html', reverse('posts:index')),
             2: (
@@ -74,6 +77,7 @@ class PostsPagesTests(TestCase):
     def test_post_lists_context(self):
         """Шаблоны index, group_list, profile
          сформированы с правильным контекстом."""
+        cache.clear()
         arguments = {
             'posts:index': None,
             'posts:group_list': {'slug': 'test-slug'},
@@ -137,6 +141,7 @@ class PaginatorViewsTest(TestCase):
 
     def test_first_page_contains_ten_records(self):
         """Пагинатор первая страница 10 постов."""
+        cache.clear()
         arguments = {
             'posts:index': None,
             'posts:group_list': {'slug': 'test-slug'},

@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.test import TestCase, Client
 from http import HTTPStatus
+from django.core.cache import cache
 
 
 from posts.models import Group, Post
@@ -43,6 +44,7 @@ class PostURLTests(TestCase):
         )
 
     def setUp(self):
+        cache.clear()
         self.guest_client = Client()
         self.user = User.objects.create_user(username='HasNoName')
         self.authorized_client = Client()
