@@ -23,7 +23,6 @@ class PostsPagesTests(TestCase):
             pk=999,
             group=cls.group,
             text='test_text',
-            
         )
 
     def setUp(self):
