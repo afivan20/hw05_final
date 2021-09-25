@@ -4,8 +4,8 @@ import tempfile
 from django.test import Client, TestCase, override_settings
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
-from posts.forms import PostForm
-from posts.models import Post
+from posts.forms import PostForm, CommentForm
+from posts.models import Post, Comment
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
@@ -26,11 +26,6 @@ class PostCreateFormTests(TestCase):
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
-        # Модуль shutil - библиотека Python с удобными инструментами
-        # для управления файлами и директориями:
-        # создание, удаление, копирование, перемещение, изменение папок
-        # и файлов
-        # Метод shutil.rmtree удаляет директорию и всё её содержимое
         shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
@@ -72,10 +67,6 @@ class PostCreateFormTests(TestCase):
                 image='posts/small.gif'
             ).exists()
         )
-        self.post = Post.objects.get(text='Новый пост')
-        # посмотреть что лежит в <image>
-        # self.assertEqual(
-        # Post.objects.filter(image='posts/small.gif'), self.post.image)
 
     def test_edit_post(self):
         """Происходит изменение поста с <post_id> в базе данных."""
@@ -90,4 +81,60 @@ class PostCreateFormTests(TestCase):
             Post.objects.filter(
                 text='Редактируем пост',
             ).exists()
+        )
+
+
+class CommentFormTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.form = CommentForm()
+        cls.user = User.objects.create_user(username='V.Pupkin')
+
+    def setUp(self):
+        self.user_author = get_object_or_404(User, username='V.Pupkin')
+        self.authorized_user = Client()
+        self.authorized_user.force_login(self.user_author)
+        self.unauthorized_user = Client()
+        self.post = Post.objects.create(
+            author=CommentFormTests.user,
+            text='Comment Me',
+            pk=2,
+        )
+
+    def test_cooment(self):
+        """Комментировать посты может только авторизованный пользователь."""
+        self.comments_count = Comment.objects.count()
+        self.form_data = {
+            'text': 'Comment from authorozied user',
+        }
+        self.response = self.authorized_user.post(
+            reverse('posts:add_comment', kwargs={'post_id': 2}),
+            data=self.form_data,
+        )
+        self.assertRedirects(self.response, reverse(
+            'posts:post_detail', kwargs={'post_id': 2})
+        )
+        self.assertEqual(Comment.objects.count(), self.comments_count + 1)
+        self.assertTrue(
+            Comment.objects.filter(
+                text='Comment from authorozied user',
+            ).exists()
+        )
+        self.response_unauthorized = self.unauthorized_user.post(
+            reverse('posts:add_comment', kwargs={'post_id': 2}),
+            data={'text': 'Comment from NOT_authorozied user'},
+        )
+        self.assertFalse(
+            Comment.objects.filter(
+                text='Comment from NOT_authorozied user',
+            ).exists()
+        )
+        response = self.authorized_user.get(
+            reverse('posts:post_detail', kwargs={'post_id': 2})
+        )
+        comment = response.context.get('comments')[0]
+        self.assertEqual(
+            comment.text,
+            'Comment from authorozied user'
         )

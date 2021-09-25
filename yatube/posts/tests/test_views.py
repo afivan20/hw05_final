@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django import forms
-from posts.models import Post, Group
+from posts.models import Post, Group, Follow
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
@@ -26,6 +26,8 @@ class PostsPagesTests(TestCase):
             slug='test-slug',
         )
         cls.user = User.objects.create_user(username='V.Pupkin')
+        cls.follower = User.objects.create_user(username='Follower')
+        cls.not_follower = User.objects.create_user(username='NotFollower')
         cls.group = get_object_or_404(Group, slug='test-slug')
         cls.small_gif = (
             b'\x47\x49\x46\x38\x39\x61\x02\x00'
@@ -92,17 +94,14 @@ class PostsPagesTests(TestCase):
                 self.assertTemplateUsed(response, template)
 
     def post_check_fields(self, post):
-        post_expected = PostsPagesTests.post
-        self.post_author_0 = post.author.username
-        self.post_text_0 = post.text
-        self.post_group_0 = post.group.title
-        self.post_date_0 = post.pub_date
-        self.image = post.image
-        self.assertEqual(self.post_author_0, post_expected.author.username)
-        self.assertEqual(self.post_text_0, post_expected.text)
-        self.assertEqual(self.post_group_0, post_expected.group.title)
-        self.assertEqual(self.image, post_expected.image)
-        self.assertIsNotNone(self.post_date_0)
+        self.assertEqual(
+            post.author.username,
+            PostsPagesTests.post.author.username
+        )
+        self.assertEqual(post.text, PostsPagesTests.post.text)
+        self.assertEqual(post.group.title, PostsPagesTests.post.group.title)
+        self.assertEqual(post.image, PostsPagesTests.post.image)
+        self.assertIsNotNone(post.pub_date)
 
     def test_post_lists_context(self):
         """Шаблоны index, group_list, profile
@@ -153,6 +152,60 @@ class PostsPagesTests(TestCase):
             with self.subTest(value=value):
                 form_field = response.context.get('form').fields.get(value)
                 self.assertIsInstance(form_field, expected)
+
+    def test_follower(self):
+        """Авторизованный пользователь может
+        подписываться на других пользователей и удалять их из подписок."""
+        self.follower = get_object_or_404(User, username='Follower')
+        self.user_authorized = Client()
+        self.user_authorized.force_login(self.follower)
+        response = self.user_authorized.get(reverse(
+            'posts:profile_follow', kwargs={'username': 'V.Pupkin'}
+        ))
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            Follow.objects.filter(author__username='V.Pupkin').exists()
+        )
+
+    def test_unfollower(self):
+        """Авторизованный пользователь может удалять
+        авторов из подписок."""
+        self.follower = get_object_or_404(User, username='Follower')
+        Follow.objects.create(author=PostsPagesTests.user, user=self.follower)
+        self.user_authorized = Client()
+        self.user_authorized.force_login(self.follower)
+        response_unfollow = self.user_authorized.get(reverse(
+            'posts:profile_unfollow', kwargs={'username': 'V.Pupkin'}
+        ))
+        self.assertEqual(response_unfollow.status_code, 302)
+        self.assertFalse(
+            Follow.objects.filter(author__username='V.Pupkin').exists()
+        )
+
+    def test_following_context(self):
+        """Новая запись пользователя появляется в ленте тех,
+        кто на него подписан и не появляется в ленте тех, кто не подписан."""
+        self.follower = get_object_or_404(User, username='Follower')
+        self.user_authorized = Client()
+        self.user_authorized.force_login(self.follower)
+        self.response_to_follow = self.user_authorized.get(reverse(
+            'posts:profile_follow', kwargs={'username': 'V.Pupkin'}
+        ))
+        response_follower = self.user_authorized.get(reverse(
+            'posts:follow_index', kwargs=None
+        ))
+        post_expected = PostsPagesTests.post
+        self.user_following_context = response_follower.context.get(
+            'page_obj'
+        )[0]
+        self.user_authorized_not_follower = Client()
+        self.not_follower = get_object_or_404(User, username='NotFollower')
+        self.user_authorized_not_follower.force_login(self.not_follower)
+        self.assertEqual(self.user_following_context.text, post_expected.text)
+        response_not_follower = self.user_authorized_not_follower.get(
+            reverse('posts:follow_index', kwargs=None)
+        )
+        self.assertEqual(len(response_not_follower.context['page_obj']), 0)
 
 
 class PaginatorViewsTest(TestCase):

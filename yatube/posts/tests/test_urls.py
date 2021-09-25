@@ -90,6 +90,23 @@ class PostURLTests(TestCase):
         response = self.authorized_client.get('/posts/999/edit/')
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
+    def test_add_comment(self):
+        """Правильные пути создания комментариев."""
+        response = self.authorized_client.get('/posts/999/comment')
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+
+    def test_follow_urls(self):
+        """Правильные пути для подписок и отписок."""
+        response = self.authorized_client.get('/profile/HasNoName/follow')
+        self.assertEqual(response.status_code, HTTPStatus.MOVED_PERMANENTLY)
+        response_unfollow = self.authorized_client.get(
+            '/profile/HasNoName/follow'
+        )
+        self.assertEqual(
+            response_unfollow.status_code,
+            HTTPStatus.MOVED_PERMANENTLY
+        )
+
     def test_urls_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
         templates_url_names = {

@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {%block title%}Пост {{post}}{% endblock %}
 {% block content %}
-
 {% load user_filters %}
 {% load thumbnail %}
       <div class="row">
@@ -13,9 +12,9 @@
               <li class="list-group-item">
                 Группа: {{post.group}}<br>
                 {% if post.group %} 
-                <a href="{% url 'posts:group_list' post.group.slug %}">
-                  все записи группы
-                </a>
+                  <a href="{% url 'posts:group_list' post.group.slug %}">
+                    все записи группы
+                  </a>
                 {% endif %}
               </li>
               <li class="list-group-item">
@@ -64,27 +63,7 @@
       </div>
     </div>
 {% endfor %}      
-
-
-{% if user.is_authenticated %}
-  <div class="card my-4">
-    <h5 class="card-header">Добавить комментарий:</h5>
-    <div class="card-body">
-      <form method="post" action="{% url 'posts:add_comment' post.id %}">
-        {% csrf_token %}      
-        <div class="form-group mb-2">
-          {{ comment.text|addclass:"form-control" }}
-        </div>
-        <button type="submit" class="btn btn-primary">Отправить</button>
-      </form>
-    </div>
-  </div>
-{% endif %}
-
-
- 
-
-      </article>
-      </div> 
-
+{% include 'posts/includes/comment_form.html' %}
+        </article>
+          </div> 
 {% endblock %}

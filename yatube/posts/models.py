@@ -68,16 +68,27 @@ class Comment(models.Model):
         Post,
         related_name='comments',
         on_delete=models.CASCADE,
+        verbose_name='Пост',
+        help_text='Выберите пост',
     )
     author = models.ForeignKey(
         User,
         related_name='comments',
         on_delete=models.CASCADE,
+        verbose_name='Автор',
+        help_text='Выберите автора',
     )
-    text = models.TextField(null=True,)
+    text = models.TextField(
+        null=True,
+        verbose_name='Комментарий',
+        help_text='Напишите ваш комментарий...',
+    )
     created = models.DateTimeField(
         auto_now_add=True,
     )
+
+    def __str__(self):
+        return self.text[:15]
 
 
 class Follow(models.Model):
@@ -86,10 +97,23 @@ class Follow(models.Model):
         related_name='follower',
         on_delete=models.SET_NULL,
         null=True,
+        help_text='Выберите пользователя',
+        verbose_name='Пользователь',
     )
     author = models.ForeignKey(
         User,
         related_name='following',
         on_delete=models.SET_NULL,
-        null=True
+        null=True,
+        verbose_name='Подписчик',
+        help_text='Выберите на кого подписан пользователь',
     )
+
+    class Meta():
+        constraints = [models.UniqueConstraint(
+            fields=['user', 'author'],
+            name='unique-in-module'
+        )]
+
+    def __str__(self):
+        return self.user.username
