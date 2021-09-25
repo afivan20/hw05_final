@@ -61,19 +61,12 @@ def post_detail(request, post_id):
     author_posts = post.author.posts
     comment_form = CommentForm()
     comments = Comment.objects.filter(post=post)
-    if request.user == post.author:
-        is_edit = True
-        context = {'post': post,
-                   'author_posts': author_posts,
-                   'is_edit': is_edit,
-                   'comment': comment_form,
-                   'comments': comments,
-                   }
-        return render(request, 'posts/post_detail.html', context)
+    is_edit = request.user == post.author
     context = {'post': post,
                'author_posts': author_posts,
                'comment': comment_form,
                'comments': comments,
+               'is_edit': is_edit,
                }
     return render(request, 'posts/post_detail.html', context)
 
