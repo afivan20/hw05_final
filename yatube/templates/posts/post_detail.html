@@ -44,24 +44,42 @@
          
 
           {% if is_edit %}
-          <form action="{% url 'posts:post_edit' post.pk %}">
-            <input type="submit"  class="btn btn-primary" name="csrfmiddlewaretoken" value="Редактировать">
-          </form>
+            <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+              <div class="btn-group me-2" role="group" aria-label="First group">
+                <form action="{% url 'posts:post_edit' post.pk %}">
+                  <input type="submit"  class="btn btn-primary" name="csrfmiddlewaretoken" value="Редактировать">
+                </form>
+              </div>
+              <div class="btn-group me-2" role="group" aria-label="Second group">
+                <form action="{% url 'posts:post_delete' post.pk  %}">
+                  <input type="submit"  class="btn btn-danger" name="csrfmiddlewaretoken" value="Удалить">
+                </form>
+              </div>
+            </div>
           {%endif%}
 <hr>
 {% for comment in comments %}
   <div class="media mb-4">
-    <div class="media-body">
+    <div class="media-bod shadow-none p-3 mb-5 bg-light rounded">
       <h5 class="mt-0">
         <a href="{% url 'posts:profile' comment.author.username %}">
           {{ comment.author.username }}
         </a>
       </h5>
+      
         <p>
          {{ comment.text }}
         </p>
-      </div>
-    </div>
+
+      <span class="text-muted">{{ comment.created }}</span>
+  
+{% if user == comment.author %}
+      <form action="{% url 'posts:comment_delete' post.id comment.id  %}">
+                  <input type="submit" class="text-dark" name="csrfmiddlewaretoken" value="Удалить">
+                </form>
+{% endif %}
+    </div>    
+  </div>
 {% endfor %}      
 {% include 'posts/includes/comment_form.html' %}
         </article>

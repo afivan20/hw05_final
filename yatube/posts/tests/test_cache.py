@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.test.client import Client
 from posts.models import Post
 from django.contrib.auth import get_user_model
 from django.urls import reverse

@@ -92,7 +92,7 @@ class PostURLTests(TestCase):
 
     def test_add_comment(self):
         """Правильные пути создания комментариев."""
-        response = self.authorized_client.get('/posts/999/comment')
+        response = self.authorized_client.get('/posts/999/comment/')
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
     def test_follow_urls(self):

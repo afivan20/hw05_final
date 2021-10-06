@@ -6,6 +6,8 @@
 {% block content %}
  {% include 'posts/includes/switcher.html' %}
   <h1>{{ title }}</h1>
+  {% load cache %}
+{% cache 20 index_cache request.user.is_authenticated %}
 {% for post in page_obj %}
   <ul>
     <li>
@@ -25,7 +27,9 @@
   {% if post.group %} 
   <a href="{% url 'posts:group_list' post.group.slug %}">все записи группы</a>
   {% endif %} 
+  Комментариев: {{ post.comments.count }}
   {% if not forloop.last %}<hr>{% endif %}
 {% endfor %} 
 {% include 'posts/includes/paginator.html' %}
+{% endcache %} 
 {% endblock %} 

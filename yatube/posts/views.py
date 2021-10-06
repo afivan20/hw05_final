@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_page
 
 
-@cache_page(20, key_prefix='index_page')
+
 def index(request):
     post_list = Post.objects.all()
     paginator = Paginator(post_list, settings.PAGINATOR_PAGE)
@@ -17,10 +17,13 @@ def index(request):
     page_obj = paginator.get_page(page_number)
     template = 'posts/index.html'
     title = 'Последние обновления на сайте'
+    comments = Comment.objects.all()
+
 
     context = {
         'page_obj': page_obj,
         'title': title,
+        'comments': comments,
     }
     return render(request, template, context)
 
@@ -105,6 +108,27 @@ def post_edit(request, post_id):
     form.save()
     template = reverse('posts:post_detail', args=[post_id])
     return redirect(template)
+
+
+def post_delete(request, post_id):
+    post = get_object_or_404(Post, pk=post_id)
+    author = post.author
+    if request.user != author:
+        return redirect('posts:post_detail', post_id)
+    post = Post.objects.filter(id=post_id)
+    if post.exists():
+        post.delete()
+    return redirect('posts:profile', request.user)
+
+def comment_delete(request, post_id, comment_id):
+    comment = get_object_or_404(Comment, pk=comment_id)
+    author = comment.author
+    if request.user != author:
+        return redirect('posts:post_detail', post_id)
+    comment = Comment.objects.filter(id=comment_id)
+    if comment.exists():
+        comment.delete()
+    return redirect('posts:post_detail', post_id)
 
 
 @login_required

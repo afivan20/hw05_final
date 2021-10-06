@@ -30,11 +30,21 @@ urlpatterns = [
         name='post_edit',
     ),
     path(
+        'posts/<int:post_id>/delete/',
+        views.post_delete,
+        name='post_delete',
+    ),
+    path(
         'create/',
         views.post_create,
         name='create_post'
     ),
-    path('posts/<int:post_id>/comment', views.add_comment, name='add_comment'),
+    path('posts/<int:post_id>/comment/', views.add_comment, name='add_comment'),
+    path(
+        'posts/<int:post_id>/comment/<int:comment_id>/delete/',
+        views.comment_delete,
+        name='comment_delete',
+    ),
     path('follow/', views.follow_index, name='follow_index'),
     path(
         'profile/<str:username>/follow/',

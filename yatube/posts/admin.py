@@ -32,6 +32,8 @@ class CommentAdmin(admin.ModelAdmin):
         'post',
         'text',
         'author',
+        'id',
+        'pk',
     )
     list_editable = ('text',)
     search_fields = ('text',)
